@@ -1,0 +1,32 @@
+{
+  "name": "radhu",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/dev.ts",
+    "mcp": "tsx mcp-server/index.ts",
+    "typecheck": "tsc --noEmit",
+    "build:lambda": "node scripts/build-lambda.mjs",
+    "cdk": "cdk",
+    "deploy": "cdk deploy"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.0",
+    "@hono/zod-validator": "^0.8.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "dotenv": "^17.2.1",
+    "hono": "^4.9.6",
+    "mongodb": "^6.18.0",
+    "zod": "^4.0.17"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.211.0",
+    "aws-cdk-lib": "^2.211.0",
+    "constructs": "^10.4.2",
+    "@types/node": "^22.17.0",
+    "esbuild": "^0.25.9",
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2"
+  }
+}
