@@ -31,6 +31,8 @@ export type Strings = {
   highest: string
   lowest: string
   noExpenses: string
+  noExpensesInCycle: string
+  cycle: (number: number, from: number, to: number) => string
   vsMonth: (month: string) => string
   noSpendingIn: (month: string) => string
   noChange: string
@@ -53,7 +55,7 @@ export type Strings = {
   paymentCount: (count: number) => string
   noPayments: string
   totalPaid: string
-  balanceDue: (amount: string) => string
+  pendingBalance: string
 }
 
 const en: Strings = {
@@ -74,6 +76,8 @@ const en: Strings = {
   highest: 'Highest',
   lowest: 'Lowest',
   noExpenses: 'No expenses recorded this month.',
+  noExpensesInCycle: 'No expenses in this cycle.',
+  cycle: (number, from, to) => `Cycle ${number} (${from}–${to})`,
   vsMonth: (month) => `vs ${month}`,
   noSpendingIn: (month) => `No spending recorded in ${month}`,
   noChange: 'No change',
@@ -102,7 +106,7 @@ const en: Strings = {
   paymentCount: (count) => `${count} ${count === 1 ? 'payment' : 'payments'}`,
   noPayments: 'No payments made this month.',
   totalPaid: 'Total paid',
-  balanceDue: (amount) => `Balance due now: ${amount}`,
+  pendingBalance: 'Pending balance',
 }
 
 const ml: Strings = {
@@ -123,6 +127,8 @@ const ml: Strings = {
   highest: 'ഏറ്റവും കൂടുതൽ',
   lowest: 'ഏറ്റവും കുറവ്',
   noExpenses: 'ഈ മാസം ചെലവുകളൊന്നും രേഖപ്പെടുത്തിയിട്ടില്ല.',
+  noExpensesInCycle: 'ഈ സൈക്കിളിൽ ചെലവുകളൊന്നുമില്ല.',
+  cycle: (number, from, to) => `സൈക്കിൾ ${number} (${from}–${to})`,
   vsMonth: (month) => `${month} മാസവുമായി താരതമ്യം`,
   noSpendingIn: (month) => `${month} മാസം ചെലവുകളൊന്നും രേഖപ്പെടുത്തിയിട്ടില്ല`,
   noChange: 'മാറ്റമില്ല',
@@ -151,7 +157,7 @@ const ml: Strings = {
   paymentCount: (count) => `${count} ${count === 1 ? 'പണമടവ്' : 'പണമടവുകൾ'}`,
   noPayments: 'ഈ മാസം പണമടവുകളൊന്നും നടത്തിയിട്ടില്ല.',
   totalPaid: 'ആകെ അടച്ചത്',
-  balanceDue: (amount) => `ഇപ്പോൾ അടയ്ക്കാനുള്ള ബാക്കി: ${amount}`,
+  pendingBalance: 'ബാക്കി തുക',
 }
 
 export const STRINGS: Record<Lang, Strings> = { en, ml }

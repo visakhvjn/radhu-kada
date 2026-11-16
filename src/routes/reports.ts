@@ -4,12 +4,8 @@ import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import type { AppBindings } from '../types/hono'
 import { currentMonthString, isMonthString, monthRange, shiftMonth } from '../lib/dates'
-import {
-  getBalanceDue,
-  getEarliestExpenseDate,
-  getYearlyTotals,
-  listPayments,
-} from '../lib/ledger'
+import { getEarliestExpenseDate, getYearlyTotals, listPayments } from '../lib/ledger'
+import { roundMoney } from '../lib/money'
 import { buildMonthlyReport } from '../reports/monthlyReport'
 import { renderMonthlyReportEmail } from '../email/monthlyReportTemplate'
 import { renderMonthlyReportPage } from '../pages/monthlyReportPage'
@@ -54,14 +50,15 @@ reportRoutes.get('/monthly', zValidator('query', monthlyQuerySchema), async (c) 
     return c.html(renderMonthlyReportEmail(report).html)
   }
 
-  const [earliestDate, yearly, payments, balanceDue] = await Promise.all([
+  const [earliestDate, yearly, payments] = await Promise.all([
     getEarliestExpenseDate(db),
     getYearlyTotals(db),
     listPayments(db, monthRange(month)),
-    getBalanceDue(db),
   ])
   const earliestMonth = earliestDate ? earliestDate.slice(0, 7) : currentMonth
   const months = monthOptions(currentMonth, earliestMonth, month)
+  const paid = roundMoney(payments.reduce((sum, payment) => sum + payment.amount, 0))
+  const pendingBalance = roundMoney(Math.max(0, report.total - paid))
 
   const cookieLang = getCookie(c, LANG_COOKIE)
   const lang = langParam ?? (isLang(cookieLang) ? cookieLang : DEFAULT_LANG)
@@ -78,7 +75,7 @@ reportRoutes.get('/monthly', zValidator('query', monthlyQuerySchema), async (c) 
       yearly,
       firstExpenseDate: earliestDate,
       payments,
-      balanceDue,
+      pendingBalance,
     }),
   )
 })

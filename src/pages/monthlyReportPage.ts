@@ -1,7 +1,7 @@
 import { formatMoney, roundMoney } from '../lib/money'
 import type { YearTotal } from '../lib/ledger'
 import type { Payment } from '../types'
-import { HISTORY_MONTHS, type MonthlyReport } from '../reports/monthlyReport'
+import { HISTORY_MONTHS, type MonthlyReport, type ReportExpense } from '../reports/monthlyReport'
 import { direction, escapeHtml, formatPct, type Direction } from '../reports/format'
 import {
   LANGUAGE_NAMES,
@@ -24,7 +24,7 @@ export type MonthlyReportPageInput = {
   yearly: YearTotal[]
   firstExpenseDate: string | null
   payments: Payment[]
-  balanceDue: number
+  pendingBalance: number
 }
 
 type Ctx = {
@@ -71,6 +71,10 @@ const STYLES = `
   .current .fill { background: #4f46e5; }
   .year-count { margin: -2px 0 6px; font-size: 12px; }
   .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .cycle { margin-top: 18px; }
+  .cycle:first-of-type { margin-top: 10px; }
+  .cycle-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .cycle-title { font-size: 14px; font-weight: 700; color: #111827; }
   .expenses { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
   .expenses th { padding: 8px 12px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; font-weight: 600; text-align: left; }
   .expenses td { padding: 10px 12px; border-bottom: 1px solid #f0f1f3; }
@@ -85,6 +89,7 @@ const STYLES = `
   .badge.highest { background: #fee2e2; color: #b91c1c; }
   .badge.lowest { background: #dcfce7; color: #15803d; }
   .expenses tfoot td { border-top: 2px solid #111827; border-bottom: none; font-weight: 700; }
+  .pending-total { color: #b45309; }
   .empty { text-align: center; padding: 32px 0; color: #6b7280; }
   html[lang="ml"] .brand { font-size: 14px; }
   html[lang="ml"] .section-title { font-size: 13px; letter-spacing: 0; text-transform: none; }
@@ -133,7 +138,12 @@ function renderMonthPicker(input: MonthlyReportPageInput, ctx: Ctx): string {
     </form>`
 }
 
-function renderSummary(report: MonthlyReport, inProgress: boolean, ctx: Ctx): string {
+function renderSummary(
+  report: MonthlyReport,
+  pendingBalance: number,
+  inProgress: boolean,
+  ctx: Ctx,
+): string {
   const details = [ctx.t.expenseCount(report.count)]
   if (report.highestDay) {
     details.push(
@@ -145,11 +155,17 @@ function renderSummary(report: MonthlyReport, inProgress: boolean, ctx: Ctx): st
   }
 
   return `
+  <div class="grid">
     <section class="card">
       <div class="muted small">${escapeHtml(inProgress ? ctx.t.totalSpentSoFar : ctx.t.totalSpent)}</div>
       <div class="total">${escapeHtml(formatMoney(report.total))}</div>
       <div class="muted small" style="margin-top:8px;">${details.map(escapeHtml).join(' &middot; ')}</div>
-    </section>`
+    </section>
+    <section class="card">
+      <div class="muted small">${escapeHtml(ctx.t.pendingBalance)}</div>
+      <div class="total pending-total">${escapeHtml(formatMoney(pendingBalance))}</div>
+    </section>
+  </div>`
 }
 
 function statCard(label: string, headline: string, tone: Direction, lines: string[]): string {
@@ -281,16 +297,14 @@ function renderAllTime(input: MonthlyReportPageInput, ctx: Ctx): string {
   </div>`
 }
 
-function renderPayments(payments: Payment[], balanceDue: number, ctx: Ctx): string {
+function renderPayments(payments: Payment[], ctx: Ctx): string {
   const { t } = ctx
-  const balance = `<div class="muted small" style="margin-top:12px;">${escapeHtml(t.balanceDue(formatMoney(balanceDue)))}</div>`
 
   if (payments.length === 0) {
     return `
     <section class="card">
       <div class="section-title">${escapeHtml(t.payments)}</div>
       <div class="empty">${escapeHtml(t.noPayments)}</div>
-      ${balance}
     </section>`
   }
 
@@ -330,24 +344,38 @@ function renderPayments(payments: Payment[], balanceDue: number, ctx: Ctx): stri
           </tr>
         </tfoot>
       </table>
-      ${balance}
     </section>`
 }
 
-function renderExpenses(report: MonthlyReport, ctx: Ctx): string {
+function dayOfMonth(date: string): number {
+  return Number(date.slice(8, 10))
+}
+
+function renderExpenseCycle(
+  expenses: ReportExpense[],
+  cycleNumber: number,
+  fromDay: number,
+  toDay: number,
+  highestDate: string | undefined,
+  lowestDate: string | undefined,
+  ctx: Ctx,
+): string {
   const { t } = ctx
-  if (report.count === 0) {
+  const total = roundMoney(expenses.reduce((sum, expense) => sum + expense.amount, 0))
+  const title = t.cycle(cycleNumber, fromDay, toDay)
+
+  if (expenses.length === 0) {
     return `
-    <section class="card">
-      <div class="section-title">${escapeHtml(t.expenses)}</div>
-      <div class="empty">${escapeHtml(t.noExpenses)}</div>
-    </section>`
+    <div class="cycle">
+      <div class="cycle-head">
+        <div class="cycle-title">${escapeHtml(title)}</div>
+        <div class="faint small">${escapeHtml(t.expenseCount(0))}</div>
+      </div>
+      <div class="empty" style="padding:20px 0;">${escapeHtml(t.noExpensesInCycle)}</div>
+    </div>`
   }
 
-  const highestDate = report.highestDay?.date
-  const lowestDate = report.lowestDay?.date !== highestDate ? report.lowestDay?.date : undefined
-
-  const rows = report.expenses
+  const rows = expenses
     .map((expense, index) => {
       const mark =
         expense.date === highestDate ? 'highest' : expense.date === lowestDate ? 'lowest' : null
@@ -365,10 +393,10 @@ function renderExpenses(report: MonthlyReport, ctx: Ctx): string {
     .join('')
 
   return `
-    <section class="card">
-      <div class="section-head">
-        <div class="section-title">${escapeHtml(t.expenses)}</div>
-        <div class="faint small">${escapeHtml(t.expenseCount(report.count))}</div>
+    <div class="cycle">
+      <div class="cycle-head">
+        <div class="cycle-title">${escapeHtml(title)}</div>
+        <div class="faint small">${escapeHtml(t.expenseCount(expenses.length))}</div>
       </div>
       <table class="expenses">
         <thead>
@@ -383,10 +411,37 @@ function renderExpenses(report: MonthlyReport, ctx: Ctx): string {
         <tfoot>
           <tr>
             <td colspan="3">${escapeHtml(t.total)}</td>
-            <td class="num">${escapeHtml(formatMoney(report.total))}</td>
+            <td class="num">${escapeHtml(formatMoney(total))}</td>
           </tr>
         </tfoot>
       </table>
+    </div>`
+}
+
+function renderExpenses(report: MonthlyReport, ctx: Ctx): string {
+  const { t } = ctx
+  if (report.count === 0) {
+    return `
+    <section class="card">
+      <div class="section-title">${escapeHtml(t.expenses)}</div>
+      <div class="empty">${escapeHtml(t.noExpenses)}</div>
+    </section>`
+  }
+
+  const lastDay = report.daily[report.daily.length - 1]?.day ?? 31
+  const firstCycle = report.expenses.filter((expense) => dayOfMonth(expense.date) <= 15)
+  const secondCycle = report.expenses.filter((expense) => dayOfMonth(expense.date) >= 16)
+  const highestDate = report.highestDay?.date
+  const lowestDate = report.lowestDay?.date !== highestDate ? report.lowestDay?.date : undefined
+
+  return `
+    <section class="card">
+      <div class="section-head">
+        <div class="section-title">${escapeHtml(t.expenses)}</div>
+        <div class="faint small">${escapeHtml(t.expenseCount(report.count))}</div>
+      </div>
+      ${renderExpenseCycle(firstCycle, 1, 1, 15, highestDate, lowestDate, ctx)}
+      ${renderExpenseCycle(secondCycle, 2, 16, lastDay, highestDate, lowestDate, ctx)}
     </section>`
 }
 
@@ -419,7 +474,7 @@ export function renderMonthlyReportPage(input: MonthlyReportPageInput): string {
       ${renderMonthPicker(input, ctx)}
     </div>
   </header>
-  ${renderSummary(report, inProgress, ctx)}
+  ${renderSummary(report, input.pendingBalance, inProgress, ctx)}
   ${renderExpenses(report, ctx)}
   <div class="grid">
     ${renderLastMonthCard(report, ctx)}
@@ -428,7 +483,7 @@ export function renderMonthlyReportPage(input: MonthlyReportPageInput): string {
   ${note}
   ${renderHistory(report, ctx)}
   ${renderAllTime(input, ctx)}
-  ${renderPayments(input.payments, input.balanceDue, ctx)}
+  ${renderPayments(input.payments, ctx)}
 </main>
 </body>
 </html>`
