@@ -35,73 +35,292 @@ type Ctx = {
 const ARROWS: Record<Direction, string> = { up: '&#9650;', down: '&#9660;', same: '' }
 
 const STYLES = `
+  :root {
+    --ink: #14201f;
+    --muted: #3d5552;
+    --faint: #6d8581;
+    --line: rgba(20, 60, 55, 0.14);
+    --accent: #067a72;
+    --accent-deep: #045c56;
+    --accent-bright: #12a89d;
+    --accent-soft: #d8f3ef;
+    --coral: #e85d4c;
+    --coral-soft: #ffe3de;
+    --gold: #c97816;
+    --gold-soft: #ffe8c4;
+    --up: #c62828;
+    --down: #1b8a50;
+    --pending: #c97816;
+    --paper: #f4faf8;
+    --white: #ffffff;
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; background: #f4f5f7; color: #111827; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Noto Sans Malayalam', 'Malayalam Sangam MN', sans-serif; }
-  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
-  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; padding: 22px 24px; border-radius: 12px; background: linear-gradient(135deg, #4338ca, #6366f1); color: #fff; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25); }
-  .brand { font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, 0.8); }
-  h1 { margin: 4px 0 0; font-size: 26px; }
-  header .muted { color: rgba(255, 255, 255, 0.85); }
-  .controls { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
-  .lang-toggle { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); }
-  .lang-toggle a { padding: 4px 12px; border-radius: 999px; color: #fff; font-size: 12px; font-weight: 600; text-decoration: none; }
-  .lang-toggle a.active { background: #fff; color: #4338ca; }
-  select { font: inherit; font-size: 14px; padding: 8px 12px; border: none; border-radius: 8px; background: #fff; color: #111827; cursor: pointer; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); }
-  .card { background: #fff; border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-  .section-title { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6b7280; margin: 0 0 12px; }
-  .total { font-size: 40px; font-weight: 700; line-height: 1.1; }
-  .muted { color: #6b7280; }
-  .faint { color: #9ca3af; }
-  .small { font-size: 13px; }
-  .note { font-size: 12px; color: #6b7280; margin: -4px 0 16px; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-  .grid .card { margin-bottom: 0; }
-  .stat { font-size: 28px; font-weight: 700; margin: 8px 0 6px; }
-  .stat-line { font-size: 13px; line-height: 1.5; color: #6b7280; }
-  .up { color: #dc2626; }
-  .down { color: #16a34a; }
-  .same { color: #6b7280; }
-  .history-row { display: grid; grid-template-columns: 96px 1fr 100px; align-items: center; gap: 8px; padding: 5px 0; font-size: 13px; color: #6b7280; }
-  .history-row.current { color: #111827; font-weight: 700; }
-  .history-row .amount { text-align: right; white-space: nowrap; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    font-family: 'Manrope', 'Noto Sans Malayalam', 'Malayalam Sangam MN', sans-serif;
+    background:
+      radial-gradient(ellipse 90% 55% at 10% -5%, #9fe8de 0%, transparent 55%),
+      radial-gradient(ellipse 70% 45% at 100% 5%, #ffd3c4 0%, transparent 50%),
+      radial-gradient(ellipse 50% 40% at 80% 100%, #ffe7b0 0%, transparent 45%),
+      linear-gradient(180deg, #e7f7f3 0%, var(--paper) 28%, #eef6f4 100%);
+    min-height: 100vh;
+  }
+  main { max-width: 780px; margin: 0 auto; padding: 28px 18px 64px; }
+  .hero {
+    padding: 22px 22px 26px;
+    margin-bottom: 18px;
+    border-radius: 18px;
+    background:
+      linear-gradient(135deg, rgba(6, 122, 114, 0.95) 0%, #0a9a8f 48%, #2bb3a3 100%);
+    color: #fff;
+    box-shadow: 0 10px 28px rgba(6, 90, 84, 0.22);
+    animation: rise 0.55s ease both;
+  }
+  .hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .brand {
+    font-family: 'Fraunces', 'Noto Serif Malayalam', Georgia, serif;
+    font-size: clamp(2.4rem, 7vw, 3.5rem);
+    font-weight: 600;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: #fff;
+    margin: 0;
+  }
+  .brand-sub { margin-top: 6px; font-size: 0.9rem; color: rgba(255, 255, 255, 0.82); font-weight: 600; }
+  h1 {
+    margin: 16px 0 0;
+    font-family: 'Fraunces', 'Noto Serif Malayalam', Georgia, serif;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: #fff;
+  }
+  .controls { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+  .lang-toggle {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.16);
+  }
+  .lang-toggle a {
+    padding: 6px 12px;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 8px;
+  }
+  .lang-toggle a.active { background: #fff; color: var(--accent-deep); }
+  .lang-toggle a:hover { color: #fff; }
+  .lang-toggle a.active:hover { color: var(--accent-deep); }
+  .month-form { display: flex; align-items: center; gap: 8px; }
+  .month-form .muted { color: rgba(255, 255, 255, 0.85); }
+  select {
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .summary {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 14px;
+    margin-top: 22px;
+  }
+  .summary-block {
+    min-width: 0;
+    padding: 16px 18px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+  }
+  .summary-block:last-child {
+    background: rgba(255, 232, 196, 0.95);
+    border-color: transparent;
+  }
+  .summary-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.78);
+  }
+  .summary-block:last-child .summary-label { color: #8a5408; }
+  .summary-block .muted { color: rgba(255, 255, 255, 0.82); }
+  .summary-block:last-child .muted { color: #8a5408; }
+  .total {
+    margin-top: 6px;
+    font-family: 'Fraunces', 'Noto Serif Malayalam', Georgia, serif;
+    font-size: clamp(2.2rem, 5.5vw, 3rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: #fff;
+  }
+  .pending-total { color: #9a5410 !important; }
+  .panel {
+    padding: 22px 20px;
+    margin-bottom: 14px;
+    border-radius: 16px;
+    background: #fff;
+    color: var(--ink);
+    border: 1px solid rgba(6, 122, 114, 0.14);
+    box-shadow: 0 6px 20px rgba(6, 90, 84, 0.08);
+    animation: rise 0.6s ease both;
+  }
+  .panel:nth-of-type(2) { animation-delay: 0.05s; }
+  .panel:nth-of-type(3) { animation-delay: 0.1s; }
+  .panel:nth-of-type(4) { animation-delay: 0.15s; }
+  .section-title {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    margin: 0 0 14px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: var(--accent-soft);
+  }
+  .muted { color: var(--muted); }
+  .faint { color: var(--faint); }
+  .small { font-size: 0.88rem; }
+  .note {
+    font-size: 0.88rem;
+    color: var(--accent-deep);
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border-left: 4px solid var(--accent);
+    background: var(--accent-soft);
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid .panel { margin-bottom: 0; }
+  .grid-wrap { margin-bottom: 14px; animation: rise 0.6s ease both; }
+  .stat {
+    font-family: 'Fraunces', 'Noto Serif Malayalam', Georgia, serif;
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 8px 0 6px;
+    letter-spacing: -0.02em;
+  }
+  .stat-line { font-size: 0.9rem; line-height: 1.5; color: var(--muted); }
+  .up { color: var(--up); }
+  .down { color: var(--down); }
+  .same { color: var(--muted); }
+  .history-row {
+    display: grid;
+    grid-template-columns: 96px 1fr 108px;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    font-size: 0.9rem;
+    color: var(--muted);
+    transition: color 0.15s ease;
+  }
+  .history-row.current { color: var(--ink); font-weight: 700; }
+  .history-row .amount { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .history-row a { color: inherit; text-decoration: none; }
-  .history-row a:hover { text-decoration: underline; }
-  .track { height: 10px; }
-  .fill { height: 10px; border-radius: 3px; background: #a5b4fc; }
-  .current .fill { background: #4f46e5; }
-  .year-count { margin: -2px 0 6px; font-size: 12px; }
+  .history-row a:hover { color: var(--accent); }
+  .track { height: 10px; background: #e4f2ef; border-radius: 999px; overflow: hidden; }
+  .fill {
+    height: 10px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #5ec4ba, var(--accent));
+    transform-origin: left center;
+    animation: grow 0.75s ease both;
+  }
+  .current .fill { background: linear-gradient(90deg, #f0a35a, var(--coral)); }
+  .year-count { margin: -2px 0 8px 106px; font-size: 0.8rem; }
   .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
-  .cycle { margin-top: 18px; }
-  .cycle:first-of-type { margin-top: 10px; }
-  .cycle-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
-  .cycle-title { font-size: 14px; font-weight: 700; color: #111827; }
-  .expenses { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
-  .expenses th { padding: 8px 12px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; font-weight: 600; text-align: left; }
-  .expenses td { padding: 10px 12px; border-bottom: 1px solid #f0f1f3; }
-  .expenses tbody tr:hover { background: #f9fafb; }
-  .expenses .sno { width: 72px; color: #9ca3af; }
+  .cycle { margin-top: 22px; }
+  .cycle:first-of-type { margin-top: 8px; }
+  .cycle-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+  .cycle-title {
+    font-family: 'Fraunces', 'Noto Serif Malayalam', Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--accent-deep);
+  }
+  .expenses { width: 100%; border-collapse: collapse; font-size: 0.95rem; margin-top: 6px; }
+  .expenses th {
+    padding: 10px 10px;
+    border-bottom: none;
+    color: var(--accent-deep);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: left;
+    background: var(--accent-soft);
+  }
+  .expenses th:first-child { border-radius: 8px 0 0 8px; }
+  .expenses th:last-child { border-radius: 0 8px 8px 0; }
+  .expenses td { padding: 11px 10px; border-bottom: 1px solid #e8f1ef; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .expenses tbody tr { transition: background 0.15s ease; }
+  .expenses tbody tr:hover { background: #f3fbf9; }
+  .expenses .sno { width: 64px; color: var(--faint); }
   .expenses .num { text-align: right; white-space: nowrap; }
-  .expenses tr.highest td { background: #fef2f2; }
-  .expenses tr.highest .num { color: #dc2626; font-weight: 600; }
-  .expenses tr.lowest td { background: #f0fdf4; }
-  .expenses tr.lowest .num { color: #16a34a; font-weight: 600; }
-  .badge { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; vertical-align: 1px; }
-  .badge.highest { background: #fee2e2; color: #b91c1c; }
-  .badge.lowest { background: #dcfce7; color: #15803d; }
-  .expenses tfoot td { border-top: 2px solid #111827; border-bottom: none; font-weight: 700; }
-  .pending-total { color: #b45309; }
-  .empty { text-align: center; padding: 32px 0; color: #6b7280; }
-  html[lang="ml"] .brand { font-size: 14px; }
-  html[lang="ml"] .section-title { font-size: 13px; letter-spacing: 0; text-transform: none; }
-  html[lang="ml"] .small, html[lang="ml"] .stat-line, html[lang="ml"] .history-row { font-size: 14px; }
-  html[lang="ml"] .expenses th { font-size: 13px; }
-  html[lang="ml"] .badge { font-size: 12px; }
-  html[lang="ml"] .note { font-size: 13px; }
-  html[lang="ml"] .lang-toggle a { font-size: 13px; }
+  .expenses tr.highest td { background: var(--coral-soft); }
+  .expenses tr.highest .num { color: var(--up); font-weight: 700; }
+  .expenses tr.lowest td { background: #e5f7ec; }
+  .expenses tr.lowest .num { color: var(--down); font-weight: 700; }
+  .badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    vertical-align: 1px;
+  }
+  .badge.highest { background: var(--coral); color: #fff; }
+  .badge.lowest { background: var(--down); color: #fff; }
+  .expenses tfoot td {
+    border-top: 2px solid var(--accent);
+    border-bottom: none;
+    font-weight: 800;
+    padding-top: 12px;
+    color: var(--accent-deep);
+  }
+  .empty { text-align: center; padding: 28px 0; color: var(--muted); }
+  @keyframes rise {
+    from { transform: translateY(12px); }
+    to { transform: translateY(0); }
+  }
+  @keyframes grow {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero, .panel, .grid-wrap, .fill { animation: none; }
+  }
+  html[lang="ml"] body { font-family: 'Noto Sans Malayalam', 'Manrope', 'Malayalam Sangam MN', sans-serif; }
+  html[lang="ml"] .brand, html[lang="ml"] h1, html[lang="ml"] .total, html[lang="ml"] .stat, html[lang="ml"] .cycle-title {
+    font-family: 'Noto Serif Malayalam', 'Fraunces', Georgia, serif;
+  }
+  html[lang="ml"] .section-title { font-size: 0.9rem; letter-spacing: 0; text-transform: none; }
+  html[lang="ml"] .small, html[lang="ml"] .stat-line, html[lang="ml"] .history-row { font-size: 0.95rem; }
+  html[lang="ml"] .expenses th { font-size: 0.85rem; letter-spacing: 0; text-transform: none; }
+  html[lang="ml"] .badge { font-size: 0.78rem; }
+  html[lang="ml"] .note { font-size: 0.9rem; }
+  html[lang="ml"] .lang-toggle a { font-size: 0.95rem; }
   @media (max-width: 600px) {
-    .grid { grid-template-columns: 1fr; }
-    .total { font-size: 34px; }
-    .controls { align-items: flex-start; }
+    .summary, .grid { grid-template-columns: 1fr; gap: 12px; }
+    .controls { align-items: flex-start; width: 100%; }
+    .year-count { margin-left: 0; }
+    .hero { padding: 18px 16px 20px; }
+    .panel { padding: 18px 14px; }
   }
 `
 
@@ -130,9 +349,9 @@ function renderMonthPicker(input: MonthlyReportPageInput, ctx: Ctx): string {
     .join('')
 
   return `
-    <form method="get" action="">
+    <form class="month-form" method="get" action="">
       <input type="hidden" name="lang" value="${ctx.lang}">
-      <label for="month" class="muted small" style="margin-right:6px;">${escapeHtml(ctx.t.month)}</label>
+      <label for="month" class="muted small">${escapeHtml(ctx.t.month)}</label>
       <select id="month" name="month" onchange="this.form.submit()">${options}</select>
       <noscript><button type="submit">${escapeHtml(ctx.t.go)}</button></noscript>
     </form>`
@@ -155,22 +374,22 @@ function renderSummary(
   }
 
   return `
-  <div class="grid">
-    <section class="card">
-      <div class="muted small">${escapeHtml(inProgress ? ctx.t.totalSpentSoFar : ctx.t.totalSpent)}</div>
+  <div class="summary">
+    <div class="summary-block">
+      <div class="summary-label">${escapeHtml(inProgress ? ctx.t.totalSpentSoFar : ctx.t.totalSpent)}</div>
       <div class="total">${escapeHtml(formatMoney(report.total))}</div>
-      <div class="muted small" style="margin-top:8px;">${details.map(escapeHtml).join(' &middot; ')}</div>
-    </section>
-    <section class="card">
-      <div class="muted small">${escapeHtml(ctx.t.pendingBalance)}</div>
+      <div class="muted small" style="margin-top:10px;">${details.map(escapeHtml).join(' · ')}</div>
+    </div>
+    <div class="summary-block">
+      <div class="summary-label">${escapeHtml(ctx.t.pendingBalance)}</div>
       <div class="total pending-total">${escapeHtml(formatMoney(pendingBalance))}</div>
-    </section>
+    </div>
   </div>`
 }
 
 function statCard(label: string, headline: string, tone: Direction, lines: string[]): string {
   return `
-    <section class="card">
+    <section class="panel">
       <div class="section-title" style="margin:0;">${escapeHtml(label)}</div>
       <div class="stat ${tone}">${headline}</div>
       ${lines.map((line) => `<div class="stat-line">${line}</div>`).join('')}
@@ -252,7 +471,7 @@ function renderHistory(report: MonthlyReport, ctx: Ctx): string {
       : `<div class="faint small" style="margin-top:8px;">${escapeHtml(ctx.t.averageOfMonths(formatMoney(Math.round(average))))}</div>`
 
   return `
-    <section class="card">
+    <section class="panel">
       <div class="section-title">${escapeHtml(ctx.t.lastMonths(HISTORY_MONTHS))}</div>
       ${body}
       ${footer}
@@ -284,16 +503,18 @@ function renderAllTime(input: MonthlyReportPageInput, ctx: Ctx): string {
     : `<div class="faint small">${escapeHtml(ctx.t.noData)}</div>`
 
   return `
-  <div class="grid">
-    <section class="card">
-      <div class="section-title">${escapeHtml(ctx.t.totalTillDate)}</div>
-      <div class="total">${escapeHtml(formatMoney(total))}</div>
-      <div class="muted small" style="margin-top:8px;">${details.map(escapeHtml).join(' &middot; ')}</div>
-    </section>
-    <section class="card">
-      <div class="section-title">${escapeHtml(ctx.t.perYear)}</div>
-      ${yearRows}
-    </section>
+  <div class="grid-wrap">
+    <div class="grid">
+      <section class="panel">
+        <div class="section-title">${escapeHtml(ctx.t.totalTillDate)}</div>
+        <div class="total">${escapeHtml(formatMoney(total))}</div>
+        <div class="muted small" style="margin-top:8px;">${details.map(escapeHtml).join(' · ')}</div>
+      </section>
+      <section class="panel">
+        <div class="section-title">${escapeHtml(ctx.t.perYear)}</div>
+        ${yearRows}
+      </section>
+    </div>
   </div>`
 }
 
@@ -302,7 +523,7 @@ function renderPayments(payments: Payment[], ctx: Ctx): string {
 
   if (payments.length === 0) {
     return `
-    <section class="card">
+    <section class="panel">
       <div class="section-title">${escapeHtml(t.payments)}</div>
       <div class="empty">${escapeHtml(t.noPayments)}</div>
     </section>`
@@ -322,7 +543,7 @@ function renderPayments(payments: Payment[], ctx: Ctx): string {
     .join('')
 
   return `
-    <section class="card">
+    <section class="panel">
       <div class="section-head">
         <div class="section-title">${escapeHtml(t.payments)}</div>
         <div class="faint small">${escapeHtml(t.paymentCount(payments.length))}</div>
@@ -422,7 +643,7 @@ function renderExpenses(report: MonthlyReport, ctx: Ctx): string {
   const { t } = ctx
   if (report.count === 0) {
     return `
-    <section class="card">
+    <section class="panel">
       <div class="section-title">${escapeHtml(t.expenses)}</div>
       <div class="empty">${escapeHtml(t.noExpenses)}</div>
     </section>`
@@ -435,7 +656,7 @@ function renderExpenses(report: MonthlyReport, ctx: Ctx): string {
   const lowestDate = report.lowestDay?.date !== highestDate ? report.lowestDay?.date : undefined
 
   return `
-    <section class="card">
+    <section class="panel">
       <div class="section-head">
         <div class="section-title">${escapeHtml(t.expenses)}</div>
         <div class="faint small">${escapeHtml(t.expenseCount(report.count))}</div>
@@ -454,31 +675,43 @@ export function renderMonthlyReportPage(input: MonthlyReportPageInput): string {
     ? `<p class="note">${escapeHtml(ctx.t.inProgressNote(monthNameLabel(report.month)))}</p>`
     : ''
 
+  const brandParts = ctx.t.brand.split('·').map((part) => part.trim())
+  const brandName = brandParts[0] ?? 'Radhu'
+  const brandTag = brandParts[1] ?? ''
+
   return `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(ctx.t.pageTitle(monthTitle))}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;600&family=Manrope:wght@400;500;600;700&family=Noto+Sans+Malayalam:wght@400;500;600;700&family=Noto+Serif+Malayalam:wght@500;600&display=swap" rel="stylesheet">
 <style>${STYLES}</style>
 </head>
 <body>
 <main>
-  <header>
-    <div>
-      <div class="brand">${escapeHtml(ctx.t.brand)}</div>
-      <h1>${escapeHtml(monthTitle)}</h1>
+  <header class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="brand">${escapeHtml(brandName)}</div>
+        ${brandTag ? `<div class="brand-sub">${escapeHtml(brandTag)}</div>` : ''}
+        <h1>${escapeHtml(monthTitle)}</h1>
+      </div>
+      <div class="controls">
+        ${renderLanguageToggle(report.month, ctx)}
+        ${renderMonthPicker(input, ctx)}
+      </div>
     </div>
-    <div class="controls">
-      ${renderLanguageToggle(report.month, ctx)}
-      ${renderMonthPicker(input, ctx)}
-    </div>
+    ${renderSummary(report, input.pendingBalance, inProgress, ctx)}
   </header>
-  ${renderSummary(report, input.pendingBalance, inProgress, ctx)}
   ${renderExpenses(report, ctx)}
-  <div class="grid">
-    ${renderLastMonthCard(report, ctx)}
-    ${renderAverageCard(report, ctx)}
+  <div class="grid-wrap">
+    <div class="grid">
+      ${renderLastMonthCard(report, ctx)}
+      ${renderAverageCard(report, ctx)}
+    </div>
   </div>
   ${note}
   ${renderHistory(report, ctx)}
