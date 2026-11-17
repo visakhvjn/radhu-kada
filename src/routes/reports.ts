@@ -66,6 +66,9 @@ reportRoutes.get('/monthly', zValidator('query', monthlyQuerySchema), async (c) 
     setCookie(c, LANG_COOKIE, langParam, { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'Lax' })
   }
 
+  const upiVpa = process.env.UPI_VPA?.trim() || null
+  const upiPayeeName = process.env.UPI_PAYEE_NAME?.trim() || 'Radhu'
+
   return c.html(
     renderMonthlyReportPage({
       report,
@@ -76,6 +79,8 @@ reportRoutes.get('/monthly', zValidator('query', monthlyQuerySchema), async (c) 
       firstExpenseDate: earliestDate,
       payments,
       pendingBalance,
+      upiVpa,
+      upiPayeeName,
     }),
   )
 })

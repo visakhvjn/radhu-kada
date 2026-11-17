@@ -23,6 +23,8 @@ export class RadhuStack extends cdk.Stack {
         MONGODB_URI: mongoUri,
         MONGODB_DB_NAME: process.env.MONGODB_DB_NAME ?? 'radhu',
         APP_TIMEZONE: process.env.APP_TIMEZONE ?? 'Asia/Kolkata',
+        ...(process.env.UPI_VPA ? { UPI_VPA: process.env.UPI_VPA } : {}),
+        ...(process.env.UPI_PAYEE_NAME ? { UPI_PAYEE_NAME: process.env.UPI_PAYEE_NAME } : {}),
       },
       bundling: {
         format: OutputFormat.ESM,

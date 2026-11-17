@@ -25,6 +25,8 @@ export type MonthlyReportPageInput = {
   firstExpenseDate: string | null
   payments: Payment[]
   pendingBalance: number
+  upiVpa: string | null
+  upiPayeeName: string
 }
 
 type Ctx = {
@@ -166,6 +168,33 @@ const STYLES = `
     color: #fff;
   }
   .pending-total { color: #9a5410 !important; }
+  .upi-meta {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .upi-id {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #8a5408;
+    word-break: break-all;
+  }
+  .pay-upi {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: #9a5410;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  html.is-mobile .pay-upi { display: inline-flex; }
+  .pay-upi:hover { background: #7d430c; }
   .panel {
     padding: 22px 20px;
     margin-bottom: 14px;
@@ -357,11 +386,23 @@ function renderMonthPicker(input: MonthlyReportPageInput, ctx: Ctx): string {
     </form>`
 }
 
+function buildUpiPayHref(vpa: string, payeeName: string, amount: number): string {
+  const params = new URLSearchParams({
+    pa: vpa,
+    pn: payeeName,
+    am: String(roundMoney(amount)),
+    cu: 'INR',
+  })
+  // Target GPay explicitly — generic upi:// often opens WhatsApp or another UPI app.
+  return `tez://upi/pay?${params.toString()}`
+}
+
 function renderSummary(
   report: MonthlyReport,
   pendingBalance: number,
   inProgress: boolean,
   ctx: Ctx,
+  upi: { vpa: string | null; payeeName: string },
 ): string {
   const details = [ctx.t.expenseCount(report.count)]
   if (report.highestDay) {
@@ -373,6 +414,17 @@ function renderSummary(
     )
   }
 
+  const upiMeta = upi.vpa
+    ? `<div class="upi-meta">
+        <div class="upi-id">${escapeHtml(upi.vpa)}</div>
+        ${
+          pendingBalance > 0
+            ? `<a class="pay-upi" href="${escapeHtml(buildUpiPayHref(upi.vpa, upi.payeeName, pendingBalance))}">${escapeHtml(ctx.t.payWithUpi)}</a>`
+            : ''
+        }
+      </div>`
+    : ''
+
   return `
   <div class="summary">
     <div class="summary-block">
@@ -383,6 +435,7 @@ function renderSummary(
     <div class="summary-block">
       <div class="summary-label">${escapeHtml(ctx.t.pendingBalance)}</div>
       <div class="total pending-total">${escapeHtml(formatMoney(pendingBalance))}</div>
+      ${upiMeta}
     </div>
   </div>`
 }
@@ -704,7 +757,10 @@ export function renderMonthlyReportPage(input: MonthlyReportPageInput): string {
         ${renderMonthPicker(input, ctx)}
       </div>
     </div>
-    ${renderSummary(report, input.pendingBalance, inProgress, ctx)}
+    ${renderSummary(report, input.pendingBalance, inProgress, ctx, {
+      vpa: input.upiVpa,
+      payeeName: input.upiPayeeName,
+    })}
   </header>
   ${renderExpenses(report, ctx)}
   <div class="grid-wrap">
@@ -718,6 +774,14 @@ export function renderMonthlyReportPage(input: MonthlyReportPageInput): string {
   ${renderAllTime(input, ctx)}
   ${renderPayments(input.payments, ctx)}
 </main>
+<script>
+(function () {
+  var ua = navigator.userAgent || '';
+  if (/Android|iPhone|iPad|iPod|Mobile/i.test(ua)) {
+    document.documentElement.classList.add('is-mobile');
+  }
+})();
+</script>
 </body>
 </html>`
 }

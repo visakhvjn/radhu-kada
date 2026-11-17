@@ -56,6 +56,7 @@ export type Strings = {
   noPayments: string
   totalPaid: string
   pendingBalance: string
+  payWithUpi: string
 }
 
 const en: Strings = {
@@ -107,6 +108,7 @@ const en: Strings = {
   noPayments: 'No payments made this month.',
   totalPaid: 'Total paid',
   pendingBalance: 'Pending balance',
+  payWithUpi: 'Pay with GPay',
 }
 
 const ml: Strings = {
@@ -158,6 +160,7 @@ const ml: Strings = {
   noPayments: 'ഈ മാസം പണമടവുകളൊന്നും നടത്തിയിട്ടില്ല.',
   totalPaid: 'ആകെ അടച്ചത്',
   pendingBalance: 'ബാക്കി തുക',
+  payWithUpi: 'GPay വഴി അടയ്ക്കുക',
 }
 
 export const STRINGS: Record<Lang, Strings> = { en, ml }
