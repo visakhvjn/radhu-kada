@@ -191,8 +191,9 @@ const STYLES = `
     font-weight: 700;
     line-height: 1;
     letter-spacing: -0.03em;
-    color: #fff;
+    color: var(--ink);
   }
+  .summary-block .total { color: #fff; }
   .pending-total { color: var(--ink) !important; }
   .upi-meta {
     margin-top: 12px;
